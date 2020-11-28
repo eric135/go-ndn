@@ -86,7 +86,7 @@ func (pkt *Packet) UnmarshalTlv(typ uint32, value []byte) error {
 		case an.TtLpPitToken:
 			pkt.Lp.PitToken = field.Value
 		case an.TtLpCongestionMark:
-			if e := field.UnmarshalNNI(&pkt.Lp.CongMark); e != nil {
+			if e := field.UnmarshalNNI(&pkt.Lp.CongestionMark); e != nil {
 				return e
 			}
 		case an.TtLpFragment:

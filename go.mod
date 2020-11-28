@@ -1,6 +1,6 @@
 module github.com/eric135/go-ndn
 
-go 1.14
+go 1.15
 
 require (
 	github.com/jwangsadinata/go-multimap v0.0.0-20190620162914-c29f3d7f33b6

@@ -15,28 +15,49 @@ func lpIsCritical(typ uint32) bool {
 
 // LpL3 contains layer 3 fields in NDNLPv2 header.
 type LpL3 struct {
-	PitToken []byte
-	CongMark int
+	PitToken        []byte
+	NextHopFaceID   int
+	IncomingFaceID  int
+	CachePolicyType int // CachePolicy wrapper is implicit
+	CongestionMark  int
 }
 
 // Empty returns true if LpL3 has zero fields.
 func (lph LpL3) Empty() bool {
-	return len(lph.PitToken) == 0 && lph.CongMark == 0
+	return len(lph.PitToken) == 0 && lph.NextHopFaceID == 0 && lph.IncomingFaceID == 0 && lph.CachePolicyType == 0 && lph.CongestionMark == 0
 }
 
 func (lph LpL3) encode() (fields []interface{}) {
 	if len(lph.PitToken) > 0 {
 		fields = append(fields, tlv.MakeElement(an.TtLpPitToken, lph.PitToken))
 	}
-	if lph.CongMark != 0 {
-		fields = append(fields, tlv.MakeElementNNI(an.TtLpCongestionMark, lph.CongMark))
+
+	if lph.NextHopFaceID != 0 {
+		fields = append(fields, tlv.MakeElementNNI(an.TtLpNextHopFaceID, lph.NextHopFaceID))
 	}
+
+	if lph.IncomingFaceID != 0 {
+		fields = append(fields, tlv.MakeElementNNI(an.TtLpIncomingFaceID, lph.IncomingFaceID))
+	}
+
+	if lph.CachePolicyType != 0 {
+		_, encodedCachePolicyType, _ := tlv.EncodeTlv(an.TtLpCachePolicyType, lph.CachePolicyType)
+		fields = append(fields, tlv.MakeElement(an.TtLpCachePolicy, encodedCachePolicyType))
+	}
+
+	if lph.CongestionMark != 0 {
+		fields = append(fields, tlv.MakeElementNNI(an.TtLpCongestionMark, lph.CongestionMark))
+	}
+
 	return fields
 }
 
 func (lph *LpL3) inheritFrom(src LpL3) {
 	lph.PitToken = src.PitToken
-	lph.CongMark = src.CongMark
+	lph.NextHopFaceID = src.NextHopFaceID
+	lph.IncomingFaceID = src.IncomingFaceID
+	lph.CachePolicyType = src.CachePolicyType
+	lph.CongestionMark = src.CongestionMark
 }
 
 // PitTokenFromUint creates a PIT token from uint64, interpreted as big endian.
@@ -144,7 +165,7 @@ func (fragmenter *LpFragmenter) Fragment(full *Packet) (frags []*Packet, e error
 
 const fragmentOverhead = 0 +
 	1 + 3 + // LpPacket TL
-	1 + 1 + 8 + // LpSeqNum
+	1 + 1 + 8 + // LpSequence
 	1 + 1 + 2 + // FragIndex
 	1 + 1 + 2 + // FragCount
 	1 + 3 + // LpPayload TL
