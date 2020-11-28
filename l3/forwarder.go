@@ -133,8 +133,8 @@ func (fw *forwarder) loop() {
 			switch {
 			case pkt.Interest != nil:
 				fw.forwardInterest(pkt)
-			case pkt.Data != nil, pkt.Nack != nil:
-				fw.forwardDataNack(pkt)
+			case pkt.Data != nil:
+				fw.forwardData(pkt)
 			}
 		}
 	}
@@ -160,7 +160,7 @@ func (fw *forwarder) forwardInterest(pkt *ndn.Packet) {
 	}
 }
 
-func (fw *forwarder) forwardDataNack(pkt *ndn.Packet) {
+func (fw *forwarder) forwardData(pkt *ndn.Packet) {
 	id, token := tokenStripID(pkt.Lp.PitToken)
 	if f := fw.faces[id]; f != nil {
 		pkt.Lp.PitToken = token

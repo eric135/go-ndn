@@ -230,16 +230,16 @@ func (interest *Interest) UnmarshalBinary(wire []byte) error {
 			if e := field.UnmarshalValue(&interest.HopLimit); e != nil {
 				return e
 			}
-		case an.TtAppParameters:
+		case an.TtApplicationParameters:
 			interest.AppParameters = field.Value
 			paramsPortion = field.WireAfter()
-		case an.TtISigInfo:
+		case an.TtInterestSignatureInfo:
 			var si SigInfo
 			if e := field.UnmarshalValue(&si); e != nil {
 				return e
 			}
 			interest.SigInfo = &si
-		case an.TtISigValue:
+		case an.TtInterestSignatureValue:
 			interest.SigValue = field.Value
 		default:
 			if field.IsCriticalType() {
@@ -275,9 +275,9 @@ func (interest Interest) encodeParamsPortion() (fields []interface{}) {
 	if len(interest.AppParameters) == 0 && interest.SigInfo == nil {
 		return
 	}
-	fields = []interface{}{tlv.MakeElement(an.TtAppParameters, interest.AppParameters)}
+	fields = []interface{}{tlv.MakeElement(an.TtApplicationParameters, interest.AppParameters)}
 	if interest.SigInfo != nil {
-		fields = append(fields, interest.SigInfo.EncodeAs(an.TtISigInfo), tlv.MakeElement(an.TtISigValue, interest.SigValue))
+		fields = append(fields, interest.SigInfo.EncodeAs(an.TtInterestSignatureInfo), tlv.MakeElement(an.TtInterestSignatureValue, interest.SigValue))
 	}
 	return
 }
@@ -289,7 +289,7 @@ func (interest Interest) encodeSignedPortion() (wire []byte, e error) {
 	} else {
 		fields = append(fields, []NameComponent(interest.Name))
 	}
-	fields = append(fields, tlv.MakeElement(an.TtAppParameters, interest.AppParameters), interest.SigInfo.EncodeAs(an.TtISigInfo))
+	fields = append(fields, tlv.MakeElement(an.TtApplicationParameters, interest.AppParameters), interest.SigInfo.EncodeAs(an.TtInterestSignatureInfo))
 	return tlv.Encode(fields...)
 }
 

@@ -185,7 +185,7 @@ func (data Data) MarshalTlv() (typ uint32, value []byte, e error) {
 	if e != nil {
 		return 0, nil, e
 	}
-	return tlv.EncodeTlv(an.TtData, signedPortion, tlv.MakeElement(an.TtDSigValue, data.SigValue))
+	return tlv.EncodeTlv(an.TtData, signedPortion, tlv.MakeElement(an.TtSignatureValue, data.SigValue))
 }
 
 // UnmarshalBinary decodes from TLV-VALUE.
@@ -218,13 +218,13 @@ func (data *Data) UnmarshalBinary(wire []byte) error {
 			}
 		case an.TtContent:
 			data.Content = field.Value
-		case an.TtDSigInfo:
+		case an.TtSignatureInfo:
 			var si SigInfo
 			if e := field.UnmarshalValue(&si); e != nil {
 				return e
 			}
 			data.SigInfo = &si
-		case an.TtDSigValue:
+		case an.TtSignatureValue:
 			data.SigValue = field.Value
 			data.l3SigValueOffset = len(wire) - len(field.WireAfter())
 		default:
@@ -257,7 +257,7 @@ func (data Data) encodeSignedPortion() (wire []byte, e error) {
 	if len(data.Content) > 0 {
 		fields = append(fields, tlv.MakeElement(an.TtContent, data.Content))
 	}
-	fields = append(fields, data.SigInfo.EncodeAs(an.TtDSigInfo))
+	fields = append(fields, data.SigInfo.EncodeAs(an.TtSignatureInfo))
 	return tlv.Encode(fields...)
 }
 

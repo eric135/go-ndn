@@ -84,7 +84,7 @@ func (si *SigInfo) UnmarshalBinary(wire []byte) error {
 	d := tlv.Decoder(wire)
 	for _, field := range d.Elements() {
 		switch field.Type {
-		case an.TtSigType:
+		case an.TtSignatureType:
 			if e := field.UnmarshalNNI(&si.Type); e != nil {
 				return e
 			}
@@ -92,16 +92,16 @@ func (si *SigInfo) UnmarshalBinary(wire []byte) error {
 			if e := field.UnmarshalValue(&si.KeyLocator); e != nil {
 				return e
 			}
-		case an.TtSigNonce:
+		case an.TtSignatureNonce:
 			if field.Length() < 1 {
 				return ErrSigNonce
 			}
 			si.Nonce = field.Value
-		case an.TtSigTime:
+		case an.TtSignatureTime:
 			if e := field.UnmarshalNNI(&si.Time); e != nil {
 				return e
 			}
-		case an.TtSigSeqNum:
+		case an.TtSignatureSeqNum:
 			if e := field.UnmarshalNNI(&si.SeqNum); e != nil {
 				return e
 			}
@@ -128,20 +128,20 @@ type sigInfoMarshaler struct {
 func (sim sigInfoMarshaler) MarshalTlv() (typ uint32, value []byte, e error) {
 	var fields []interface{}
 	if si := sim.si; si == nil {
-		fields = append(fields, tlv.MakeElementNNI(an.TtSigType, an.SigNull))
+		fields = append(fields, tlv.MakeElementNNI(an.TtSignatureType, an.SignatureNull))
 	} else {
-		fields = append(fields, tlv.MakeElementNNI(an.TtSigType, si.Type))
+		fields = append(fields, tlv.MakeElementNNI(an.TtSignatureType, si.Type))
 		if !si.KeyLocator.Empty() {
 			fields = append(fields, si.KeyLocator)
 		}
 		if si.Time > 0 {
-			fields = append(fields, tlv.MakeElementNNI(an.TtSigTime, si.Time))
+			fields = append(fields, tlv.MakeElementNNI(an.TtSignatureTime, si.Time))
 		}
 		if len(si.Nonce) > 0 {
-			fields = append(fields, tlv.MakeElement(an.TtSigNonce, si.Nonce))
+			fields = append(fields, tlv.MakeElement(an.TtSignatureNonce, si.Nonce))
 		}
 		if si.SeqNum > 0 {
-			fields = append(fields, tlv.MakeElementNNI(an.TtSigSeqNum, si.SeqNum))
+			fields = append(fields, tlv.MakeElementNNI(an.TtSignatureSeqNum, si.SeqNum))
 		}
 		fields = append(fields, si.Extensions)
 	}

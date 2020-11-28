@@ -64,7 +64,7 @@ func (f *fwFace) rxLoop() {
 		case pkt.Interest != nil:
 			pkt.Lp.PitToken = tokenInsertID(pkt.Lp.PitToken, f.id)
 			f.fw.pkt <- pkt
-		case pkt.Data != nil, pkt.Nack != nil:
+		case pkt.Data != nil:
 			f.fw.pkt <- pkt
 		}
 	}

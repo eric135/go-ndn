@@ -5,7 +5,6 @@
 //  Packet representation:
 //  - Interest
 //  - Data
-//  - Nack
 //  - Packet
 //
 //  Security abstraction:
@@ -34,7 +33,6 @@ type Packet struct {
 	Fragment *LpFragment
 	Interest *Interest
 	Data     *Data
-	Nack     *Nack
 }
 
 func (pkt *Packet) String() string {
@@ -49,8 +47,6 @@ func (pkt *Packet) String() string {
 		return "I " + pkt.Interest.String() + suffix
 	case pkt.Data != nil:
 		return "D " + pkt.Data.String() + suffix
-	case pkt.Nack != nil:
-		return "N " + pkt.Nack.String() + suffix
 	}
 	return "(bad-NDN-packet)"
 }
@@ -74,7 +70,7 @@ func (pkt *Packet) MarshalTlv() (typ uint32, value []byte, e error) {
 	if len(header) == 0 {
 		return pkt.l3type, pkt.l3value, nil
 	}
-	return tlv.EncodeTlv(an.TtLpPacket, header, tlv.MakeElement(an.TtLpPayload, payload))
+	return tlv.EncodeTlv(an.TtLpPacket, header, tlv.MakeElement(an.TtLpFragment, payload))
 }
 
 // UnmarshalTlv decodes from wire format.
@@ -87,31 +83,13 @@ func (pkt *Packet) UnmarshalTlv(typ uint32, value []byte) error {
 	d := tlv.Decoder(value)
 	for _, field := range d.Elements() {
 		switch field.Type {
-		case an.TtPitToken:
+		case an.TtLpPitToken:
 			pkt.Lp.PitToken = field.Value
-		case an.TtNack:
-			pkt.Lp.NackReason = an.NackUnspecified
-			d1 := tlv.Decoder(field.Value)
-			for _, field1 := range d1.Elements() {
-				switch field1.Type {
-				case an.TtNackReason:
-					if e := field1.UnmarshalNNI(&pkt.Lp.NackReason); e != nil {
-						return e
-					}
-				default:
-					if lpIsCritical(field1.Type) {
-						return tlv.ErrCritical
-					}
-				}
-			}
-			if e := d1.ErrUnlessEOF(); e != nil {
-				return e
-			}
-		case an.TtCongestionMark:
+		case an.TtLpCongestionMark:
 			if e := field.UnmarshalNNI(&pkt.Lp.CongMark); e != nil {
 				return e
 			}
-		case an.TtLpPayload:
+		case an.TtLpFragment:
 			d1 := tlv.Decoder(field.Value)
 			field1, e := d1.Element()
 			if e != nil {
@@ -135,15 +113,9 @@ func (pkt *Packet) encodeL3() (header, payload []byte, e error) {
 	case pkt.Interest != nil:
 		pkt.l3type, pkt.l3value, e = pkt.Interest.MarshalTlv()
 		pkt.l3digest = nil
-		pkt.Lp.NackReason = an.NackNone
 	case pkt.Data != nil:
 		pkt.l3type, pkt.l3value, e = pkt.Data.MarshalTlv()
 		pkt.l3digest = nil
-		pkt.Lp.NackReason = an.NackNone
-	case pkt.Nack != nil:
-		pkt.l3type, pkt.l3value, e = pkt.Nack.Interest.MarshalTlv()
-		pkt.l3digest = nil
-		pkt.Lp.NackReason = pkt.Nack.Reason
 	}
 	if e != nil {
 		return nil, nil, e
@@ -162,16 +134,8 @@ func (pkt *Packet) decodeL3(typ uint32, value []byte) error {
 		if e != nil {
 			return e
 		}
-		if pkt.Lp.NackReason != an.NackNone {
-			var nack Nack
-			nack.Reason = pkt.Lp.NackReason
-			nack.Interest = interest
-			nack.packet = pkt
-			pkt.Nack = &nack
-		} else {
-			interest.packet = pkt
-			pkt.Interest = &interest
-		}
+		interest.packet = pkt
+		pkt.Interest = &interest
 	case an.TtData:
 		var data Data
 		e := data.UnmarshalBinary(value)

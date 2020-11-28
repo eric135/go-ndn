@@ -1,7 +1,5 @@
 package ndntestvector
 
-import "github.com/eric135/go-ndn/an"
-
 const (
 	bareInterest     = "0505 0703080141"
 	payloadInterest  = "5007 " + bareInterest
@@ -12,15 +10,14 @@ const (
 
 // LpDecodeTests contains test vectors for NDNLPv2 decoder.
 var LpDecodeTests = []struct {
-	Input      string
-	Bad        bool
-	SeqNum     uint64
-	FragIndex  uint16
-	FragCount  uint16
-	PitToken   uint64
-	NackReason uint8
-	CongMark   uint8
-	PayloadL   int
+	Input     string
+	Bad       bool
+	SeqNum    uint64
+	FragIndex uint16
+	FragCount uint16
+	PitToken  uint64
+	CongMark  uint8
+	PayloadL  int
 }{
 	{Input: "", Bad: true},
 	{Input: bareInterest, FragCount: 1, PayloadL: payloadInterestL},
@@ -40,10 +37,6 @@ var LpDecodeTests = []struct {
 	{Input: "6413 pittoken=62089A414B412BC38EB2 payload=" + payloadInterest,
 		FragCount: 1, PitToken: 0x9A414B412BC38EB2, PayloadL: payloadInterestL},
 	{Input: "6406 pittoken=620420A3C0D7", Bad: true}, // PitToken is not 8-octet
-	{Input: "640D nack=FD032000(noreason) payload=" + payloadInterest,
-		FragCount: 1, NackReason: an.NackUnspecified, PayloadL: payloadInterestL},
-	{Input: "6412 nack=FD032005(FD03210196~noroute) payload=" + payloadInterest,
-		FragCount: 1, NackReason: an.NackNoRoute, PayloadL: payloadInterestL},
 	{Input: "640E congmark=FD03400104 payload=" + payloadInterest,
 		FragCount: 1, CongMark: 4, PayloadL: payloadInterestL},
 }

@@ -11,11 +11,12 @@ Go-NDN is a fork of the [NDNgo](https://github.com/usnistgov/ndn-dpdk/tree/maste
   * TLV evolvability: yes
   * Signed Interest: basic support (**expansion planned**)
 * [NDNLPv2](https://redmine.named-data.net/projects/nfd/wiki/NDNLPv2)
-  * Fragmentation and reassembly: no (**planned**)
-  * Nack: yes
-  * PIT token: yes
-  * Congestion mark: yes
-  * Link layer reliability: no (**planned**)
+  * Fragmentation and reassembly: **planned**
+  * Nacks: no
+  * PIT tokens: yes
+  * Congestion marks: yes
+  * Link layer reliability: **planned**
+  * Self-learning: **planned**
 * Naming Convention: no
 
 ### Key Chain
@@ -23,10 +24,10 @@ Go-NDN is a fork of the [NDNgo](https://github.com/usnistgov/ndn-dpdk/tree/maste
 * Encryption: no
 * Signing algorithms
   * SHA256: yes
-  * ECDSA: yes (in [package eckey](keychain/eckey))
-  * RSA: yes (in [package rsakey](keychain/rsakey))
-  * HMAC-SHA256: no
+  * SHA256-RSA: yes (in [package rsakey](keychain/rsakey))
+  * SHA256-ECDSA: yes (in [package eckey](keychain/eckey))
+  * HMAC-SHA256: **planned**
   * [Null](https://redmine.named-data.net/projects/ndn-tlv/wiki/NullSignature): yes
-* [NDN certificates](https://named-data.net/doc/ndn-cxx/0.7.0/specs/certificate-format.html): no (**planned**)
-* Key persistence: no (**planned**)
-* Trust schema: no (**planned**)
+* [NDN certificates](https://named-data.net/doc/ndn-cxx/0.7.0/specs/certificate-format.html): **planned**
+* Key persistence: **planned**
+* Trust schema: **planned**

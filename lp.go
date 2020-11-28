@@ -15,29 +15,21 @@ func lpIsCritical(typ uint32) bool {
 
 // LpL3 contains layer 3 fields in NDNLPv2 header.
 type LpL3 struct {
-	PitToken   []byte
-	NackReason uint8
-	CongMark   int
+	PitToken []byte
+	CongMark int
 }
 
 // Empty returns true if LpL3 has zero fields.
 func (lph LpL3) Empty() bool {
-	return len(lph.PitToken) == 0 && lph.NackReason == an.NackNone && lph.CongMark == 0
+	return len(lph.PitToken) == 0 && lph.CongMark == 0
 }
 
 func (lph LpL3) encode() (fields []interface{}) {
 	if len(lph.PitToken) > 0 {
-		fields = append(fields, tlv.MakeElement(an.TtPitToken, lph.PitToken))
-	}
-	if lph.NackReason != an.NackNone {
-		var nackV []byte
-		if lph.NackReason != an.NackUnspecified {
-			nackV, _ = tlv.Encode(tlv.MakeElementNNI(an.TtNackReason, lph.NackReason))
-		}
-		fields = append(fields, tlv.MakeElement(an.TtNack, nackV))
+		fields = append(fields, tlv.MakeElement(an.TtLpPitToken, lph.PitToken))
 	}
 	if lph.CongMark != 0 {
-		fields = append(fields, tlv.MakeElementNNI(an.TtCongestionMark, lph.CongMark))
+		fields = append(fields, tlv.MakeElementNNI(an.TtLpCongestionMark, lph.CongMark))
 	}
 	return fields
 }
@@ -65,7 +57,7 @@ func PitTokenToUint(token []byte) uint64 {
 
 // LpFragment represents an NDNLPv2 fragmented frame.
 type LpFragment struct {
-	SeqNum    uint64
+	Sequence  uint64
 	FragIndex int
 	FragCount int
 	header    []byte
@@ -73,7 +65,7 @@ type LpFragment struct {
 }
 
 func (frag LpFragment) String() string {
-	return strconv.FormatUint(frag.SeqNum, 16) + ":" + strconv.Itoa(frag.FragIndex) + ":" + strconv.Itoa(frag.FragCount)
+	return strconv.FormatUint(frag.Sequence, 16) + ":" + strconv.Itoa(frag.FragIndex) + ":" + strconv.Itoa(frag.FragCount)
 }
 
 // MarshalTlv encodes this fragment.
@@ -82,13 +74,13 @@ func (frag LpFragment) MarshalTlv() (typ uint32, value []byte, e error) {
 		return 0, nil, ErrFragment
 	}
 	seqNum := make([]byte, 8)
-	binary.BigEndian.PutUint64(seqNum, frag.SeqNum)
+	binary.BigEndian.PutUint64(seqNum, frag.Sequence)
 	return tlv.EncodeTlv(an.TtLpPacket,
-		tlv.MakeElement(an.TtLpSeqNum, seqNum),
-		tlv.MakeElementNNI(an.TtFragIndex, frag.FragIndex),
-		tlv.MakeElementNNI(an.TtFragCount, frag.FragCount),
+		tlv.MakeElement(an.TtLpSequence, seqNum),
+		tlv.MakeElementNNI(an.TtLpFragIndex, frag.FragIndex),
+		tlv.MakeElementNNI(an.TtLpFragCount, frag.FragCount),
 		frag.header,
-		tlv.MakeElement(an.TtLpPayload, frag.payload))
+		tlv.MakeElement(an.TtLpFragment, frag.payload))
 }
 
 // LpFragmenter splits Packet into fragments.
@@ -142,7 +134,7 @@ func (fragmenter *LpFragmenter) Fragment(full *Packet) (frags []*Packet, e error
 	}
 
 	for i, frag := range frags {
-		frag.Fragment.SeqNum = fragmenter.nextSeqNum
+		frag.Fragment.Sequence = fragmenter.nextSeqNum
 		fragmenter.nextSeqNum++
 		frag.Fragment.FragIndex = i
 		frag.Fragment.FragCount = len(frags)

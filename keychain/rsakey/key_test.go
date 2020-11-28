@@ -50,10 +50,10 @@ func TestSigning(t *testing.T) {
 	rec := c.CheckData(t)
 
 	dataA := rec.PktA.(*ndn.Data)
-	assert.EqualValues(an.SigSha256WithRsa, dataA.SigInfo.Type)
+	assert.EqualValues(an.SignatureSha256WithRsa, dataA.SigInfo.Type)
 	nameEqual(assert, keyNameA, dataA.SigInfo.KeyLocator)
 	dataB := rec.PktB.(*ndn.Data)
-	assert.EqualValues(an.SigSha256WithRsa, dataB.SigInfo.Type)
+	assert.EqualValues(an.SignatureSha256WithRsa, dataB.SigInfo.Type)
 	nameEqual(assert, certNameB, dataB.SigInfo.KeyLocator)
 }
 

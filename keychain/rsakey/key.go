@@ -45,7 +45,7 @@ func (pvt *privateKey) Name() ndn.Name {
 
 func (pvt *privateKey) Sign(packet ndn.Signable) error {
 	return packet.SignWith(func(name ndn.Name, si *ndn.SigInfo) (ndn.LLSign, error) {
-		si.Type = an.SigSha256WithRsa
+		si.Type = an.SignatureSha256WithRsa
 		si.KeyLocator = ndn.KeyLocator{
 			Name: pvt.name,
 		}
@@ -73,7 +73,7 @@ func (pub *publicKey) Name() ndn.Name {
 
 func (pub *publicKey) Verify(packet ndn.Verifiable) error {
 	return packet.VerifyWith(func(name ndn.Name, si ndn.SigInfo) (ndn.LLVerify, error) {
-		if si.Type != an.SigSha256WithRsa {
+		if si.Type != an.SignatureSha256WithRsa {
 			return nil, ndn.ErrSigType
 		}
 		return func(input, sig []byte) error {
