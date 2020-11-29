@@ -15,16 +15,18 @@ func lpIsCritical(typ uint32) bool {
 
 // LpL3 contains layer 3 fields in NDNLPv2 header.
 type LpL3 struct {
-	PitToken        []byte
-	NextHopFaceID   int
-	IncomingFaceID  int
-	CachePolicyType int // CachePolicy wrapper is implicit
-	CongestionMark  int
+	PitToken           []byte
+	NextHopFaceID      int
+	IncomingFaceID     int
+	CachePolicyType    int // CachePolicy wrapper is implicit
+	CongestionMark     int
+	NonDiscovery       bool
+	PrefixAnnouncement Data
 }
 
 // Empty returns true if LpL3 has zero fields.
 func (lph LpL3) Empty() bool {
-	return len(lph.PitToken) == 0 && lph.NextHopFaceID == 0 && lph.IncomingFaceID == 0 && lph.CachePolicyType == 0 && lph.CongestionMark == 0
+	return len(lph.PitToken) == 0 && lph.NextHopFaceID == 0 && lph.IncomingFaceID == 0 && lph.CachePolicyType == 0 && lph.CongestionMark == 0 && lph.NonDiscovery == false && len(lph.PrefixAnnouncement.Name) == 0
 }
 
 func (lph LpL3) encode() (fields []interface{}) {
@@ -49,6 +51,14 @@ func (lph LpL3) encode() (fields []interface{}) {
 		fields = append(fields, tlv.MakeElementNNI(an.TtLpCongestionMark, lph.CongestionMark))
 	}
 
+	if lph.NonDiscovery == true {
+		fields = append(fields, tlv.MakeElement(an.TtLpNonDiscovery, []byte{}))
+	}
+
+	if len(lph.PrefixAnnouncement.Name) != 0 {
+		fields = append(fields, lph.PrefixAnnouncement)
+	}
+
 	return fields
 }
 
@@ -58,6 +68,8 @@ func (lph *LpL3) inheritFrom(src LpL3) {
 	lph.IncomingFaceID = src.IncomingFaceID
 	lph.CachePolicyType = src.CachePolicyType
 	lph.CongestionMark = src.CongestionMark
+	lph.NonDiscovery = src.NonDiscovery
+	lph.PrefixAnnouncement = src.PrefixAnnouncement
 }
 
 // PitTokenFromUint creates a PIT token from uint64, interpreted as big endian.
