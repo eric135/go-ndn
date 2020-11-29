@@ -1,31 +1,48 @@
 package ndn_test
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/eric135/go-ndn"
 	"github.com/eric135/go-ndn/tlv"
 )
 
-func TestLpFragmenter(t *testing.T) {
-	assert, require := makeAR(t)
+func TestLpPacketEncode(t *testing.T) {
+	assert, _ := makeAR(t)
 
-	data := ndn.MakeData("/D", bytes.Repeat([]byte{0xCC}, 3000))
-	packet := data.ToPacket()
-	packet.Lp.PitToken = ndn.PitTokenFromUint(0x808ecd3df4e1b062)
+	lpPacket := ndn.MakeLpPacket()
+	var interest ndn.Interest
+	interest.Name = ndn.ParseName("/A")
+	lpPacket.LpFragment.Interest = &interest
 
-	fragmenter := ndn.NewLpFragmenter(1000)
-	frags, e := fragmenter.Fragment(packet)
-	require.NoError(e)
-	require.Len(frags, 4)
+	wire, err := tlv.Encode(lpPacket)
+	assert.NoError(err)
+	assert.Equal(bytesFromHex("640F 500D 050B 0703080141 0A04"), wire[:13])
+}
 
-	for _, frag := range frags {
-		wire, _ := tlv.Encode(frag)
-		assert.LessOrEqual(len(wire), 1000)
-	}
+func TestLpPacketDecode(t *testing.T) {
+	assert, _ := makeAR(t)
 
-	tooSmall := ndn.NewLpFragmenter(10)
-	_, e = tooSmall.Fragment(packet)
-	assert.Error(e)
+	var pkt ndn.LpPacket
+	assert.NoError(tlv.Decode(bytesFromHex("641F sequence=51088877665544332211 fragindex=520100 fragcount=530101 500D 050B 0703080141 0A0401020304"), &pkt))
+
+	assert.True(pkt.Sequence.HasValue)
+	assert.Equal(uint64(0x8877665544332211), pkt.Sequence.Val)
+	assert.Equal(0, pkt.FragIndex)
+	assert.Equal(1, pkt.FragCount)
+
+	assert.NotNil(pkt.LpFragment.Interest)
+	interest := pkt.LpFragment.Interest
+	nameEqual(assert, "/A", interest)
+}
+
+func TestLpPacketDecodeBare(t *testing.T) {
+	assert, _ := makeAR(t)
+
+	var pkt ndn.LpPacket
+	assert.NoError(tlv.Decode(bytesFromHex("050B 0703080141 0A0401020304"), &pkt))
+
+	assert.NotNil(pkt.LpFragment.Interest)
+	interest := pkt.LpFragment.Interest
+	nameEqual(assert, "/A", interest)
 }

@@ -7,6 +7,9 @@
 //  - Data
 //  - Packet
 //
+//  Link protocol:
+//  - LpPacket
+//
 //  Security abstraction:
 //  - Signer
 //  - Verifier
@@ -30,7 +33,6 @@ type Packet struct {
 	l3type   uint32
 	l3value  []byte
 	l3digest []byte
-	Fragment *LpFragment
 	Interest *Interest
 	Data     *Data
 }
@@ -41,8 +43,6 @@ func (pkt *Packet) String() string {
 		suffix = " token=" + hex.EncodeToString(pkt.Lp.PitToken)
 	}
 	switch {
-	case pkt.Fragment != nil:
-		return "Frag " + pkt.Fragment.String() + suffix
 	case pkt.Interest != nil:
 		return "I " + pkt.Interest.String() + suffix
 	case pkt.Data != nil:
@@ -58,19 +58,11 @@ func (pkt *Packet) ToPacket() *Packet {
 
 // MarshalTlv encodes this packet.
 func (pkt *Packet) MarshalTlv() (typ uint32, value []byte, e error) {
-	if pkt.Fragment != nil {
-		return pkt.Fragment.MarshalTlv()
-	}
-
-	header, payload, e := pkt.encodeL3()
+	payload, e := pkt.encodeL3()
 	if e != nil {
 		return 0, nil, e
 	}
-
-	if len(header) == 0 {
-		return pkt.l3type, pkt.l3value, nil
-	}
-	return tlv.EncodeTlv(an.TtLpPacket, header, tlv.MakeElement(an.TtLpFragment, payload))
+	return tlv.EncodeTlv(an.TtLpPacket, tlv.MakeElement(an.TtLpFragment, payload))
 }
 
 // UnmarshalTlv decodes from wire format.
@@ -107,8 +99,8 @@ func (pkt *Packet) UnmarshalTlv(typ uint32, value []byte) error {
 	return d.ErrUnlessEOF()
 }
 
-func (pkt *Packet) encodeL3() (header, payload []byte, e error) {
-	e = ErrFragment
+func (pkt *Packet) encodeL3() (payload []byte, e error) {
+	e = ErrUnexpectedElem
 	switch {
 	case pkt.Interest != nil:
 		pkt.l3type, pkt.l3value, e = pkt.Interest.MarshalTlv()
@@ -118,12 +110,11 @@ func (pkt *Packet) encodeL3() (header, payload []byte, e error) {
 		pkt.l3digest = nil
 	}
 	if e != nil {
-		return nil, nil, e
+		return nil, e
 	}
 
-	header, _ = tlv.Encode(pkt.Lp.encode())
 	payload, _ = tlv.Encode(tlv.MakeElement(pkt.l3type, pkt.l3value))
-	return header, payload, nil
+	return payload, nil
 }
 
 func (pkt *Packet) decodeL3(typ uint32, value []byte) error {

@@ -30,19 +30,6 @@ func TestInterestEncode(t *testing.T) {
 	assert.Equal("/8=B[P][F]", interest.String())
 }
 
-func TestInterestLpEncode(t *testing.T) {
-	assert, _ := makeAR(t)
-
-	var lph ndn.LpL3
-	lph.PitToken = ndn.PitTokenFromUint(0xF0F1F2F3F4F5F6F7)
-	interest := ndn.MakeInterest("/A", lph, ndn.NonceFromUint(0xC0C1C2C3))
-
-	wire, e := tlv.Encode(interest.ToPacket())
-	assert.NoError(e)
-	assert.Equal(bytesFromHex("6419 pittoken=6208F0F1F2F3F4F5F6F7 payload=500D "+
-		"interest=050B 0703080141 0A04C0C1C2C3"), wire)
-}
-
 func TestInterestDecode(t *testing.T) {
 	assert, _ := makeAR(t)
 
