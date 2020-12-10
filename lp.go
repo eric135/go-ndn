@@ -106,11 +106,11 @@ func PitTokenToUint(token []byte) uint64 {
 
 // LpPacket represents an NDNLPv2 frame.
 type LpPacket struct {
-	Sequence            util.OptionalUint64
+	Sequence            util.Optional
 	FragIndex           int
 	FragCount           int
 	Acks                []uint64
-	TxSequence          util.OptionalUint64
+	TxSequence          util.Optional
 	SelfLearningHeaders SelfLearningHeaders
 	LpFragment          *Packet
 }
@@ -127,7 +127,7 @@ func (lp LpPacket) String() string {
 	retVal := ""
 	hasPrevValue := false
 	if lp.Sequence.HasValue {
-		retVal += strconv.FormatUint(lp.Sequence.Val, 16)
+		retVal += strconv.FormatUint(lp.Sequence.Value.(uint64), 16)
 		hasPrevValue = true
 	}
 	if lp.FragIndex >= 0 {
@@ -168,7 +168,7 @@ func (lp LpPacket) MarshalTlv() (typ uint32, value []byte, e error) {
 
 	if lp.Sequence.HasValue {
 		seqNum := make([]byte, 8)
-		binary.BigEndian.PutUint64(seqNum, lp.Sequence.Val)
+		binary.BigEndian.PutUint64(seqNum, lp.Sequence.Value.(uint64))
 		fields = append(fields, tlv.MakeElement(an.TtLpSequence, seqNum))
 	}
 
@@ -195,7 +195,7 @@ func (lp LpPacket) MarshalTlv() (typ uint32, value []byte, e error) {
 
 	if lp.TxSequence.HasValue {
 		txSeqNum := make([]byte, 8)
-		binary.BigEndian.PutUint64(txSeqNum, lp.TxSequence.Val)
+		binary.BigEndian.PutUint64(txSeqNum, lp.TxSequence.Value.(uint64))
 		fields = append(fields, tlv.MakeElement(an.TtLpTxSequence, txSeqNum))
 	}
 

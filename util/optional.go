@@ -1,23 +1,18 @@
 package util
 
-// Optional is the base for various optional value types.
-type optional struct {
+// Optional represents a variable with an optional value.
+type Optional struct {
+	Value    interface{}
 	HasValue bool
 }
 
 // Unset unsets an optional value.
-func (o *optional) Unset() {
+func (o *Optional) Unset() {
 	o.HasValue = false
 }
 
-// OptionalUint64 represents an optional uint64.
-type OptionalUint64 struct {
-	Val uint64
-	optional
-}
-
-// Set sets the value of an optional uint64.
-func (o *OptionalUint64) Set(val uint64) {
+// Set sets an optional value.
+func (o *Optional) Set(val interface{}) {
+	o.Value = val
 	o.HasValue = true
-	o.Val = val
 }

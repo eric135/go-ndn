@@ -27,7 +27,7 @@ func TestLpPacketDecode(t *testing.T) {
 	assert.NoError(tlv.Decode(bytesFromHex("641F sequence=51088877665544332211 fragindex=520100 fragcount=530101 500D 050B 0703080141 0A0401020304"), &pkt))
 
 	assert.True(pkt.Sequence.HasValue)
-	assert.Equal(uint64(0x8877665544332211), pkt.Sequence.Val)
+	assert.Equal(uint64(0x8877665544332211), pkt.Sequence.Value.(uint64))
 	assert.Equal(0, pkt.FragIndex)
 	assert.Equal(1, pkt.FragCount)
 
